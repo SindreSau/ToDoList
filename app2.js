@@ -1,14 +1,21 @@
 const inputText = document.getElementById('inputText');
 const inputSubmit = document.getElementById('inputSubmit');
 const returnList = document.getElementById('returnList');
-let deleteButtons;
-let textContent;
-let counter = 1;
+let deleteButtons = [];
+let inStorageValues = [];
+let inStorageKeys = [];
+let counter = inStorageValues.length;
 
 //input handling:
 inputSubmit.onclick = () => {
-  textContent = inputText.value;
-  createNewListItem(textContent);
+  try {
+    textContent = inputText.value;
+    createNewListItem(textContent);
+    /* localStorage.setItem('counter', counter); */
+    localStorage.setItem(counter, textContent);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 inputText.addEventListener('keydown', (e) => {
@@ -17,28 +24,26 @@ inputText.addEventListener('keydown', (e) => {
   }
 })
 
-
-//Create items:
 function createNewListItem(textContent) {
+  counter++;
   inputText.value = "";
+
+  //Create new items:
   let listItem = new ListItem(textContent);
-  let listWrapper = document.createElement('div')
+  let listWrapper = document.createElement('li')
   listWrapper.classList = `list-wrapper ${counter}`;
   listWrapper.innerHTML = listItem.getTextContent();
   returnList.appendChild(listWrapper);
-
-  //Save items:
-  counter = localStorage.getItem('counter') || 1;
-  window.localStorage.setItem(counter++, `${textContent}`);
-  localStorage.setItem('counter', counter);
 
   //Delete items:
   deleteButtons = document.getElementsByClassName('list-delete')
   for (let button of deleteButtons) {
     button.addEventListener('click', (e) => {
       let buttonNumber = button.id;
+      console.log(buttonNumber);
       let toRemove = e.target.closest(".list-wrapper")
       toRemove.remove()
+      localStorage.removeItem(buttonNumber)
     })
   }
 }
@@ -51,40 +56,35 @@ class ListItem {
 
   getTextContent() {
     return `
-      <li class="list-item">
+      <div class="list-item">
         <input type="checkbox">
         <p>${this.textContent}</p>
         <img id="${counter}" class="list-delete" src="assets/delete.png" alt="delete">
-      </li>
+      </div>
     `;
   }
 }
 
-//Hente lagret data på load:
+
+//get items into inStorage on load:
 window.onload = () => {
-  /* counter = localStorage.getItem('counter') || 1; */
-  try {
-    if (localStorage.length < 100 && localStorage.length > 0) {
-      for (let i = localStorage.length; i > 0; i++) {
-        let key = localStorage.key(i)
-        let value = localStorage.getItem(key)
-        if (key != "debug" && key != "counter") {
-          /* createOnLoad(value); */
-          console.log("running createOnLoad");
-        }
+  let key;
+  if (localStorage.length <= 15) {
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i) !== "debug") {
+        key = inStorageKeys.push(localStorage.key(i));
       }
-    } else {
-      localStorage.clear();
     }
-  } catch (error) {
-    console.log(error);
+  } else {
+    localStorage.clear();
   }
+  for (let i = 0; i < inStorageKeys.length; i++) {
+    key = inStorageKeys[i]
+    inStorageValues.push(localStorage.getItem(key));
+    createNewListItem(inStorageValues[i])
+  }
+  console.log(inStorageValues);
+  console.log(inStorageKeys);
 }
 
-function createOnLoad(textContentOnLoad) {
-  let listItem = new ListItem(textContentOnLoad);
-  let listWrapper = document.createElement('div')
-  listWrapper.classList = `list-wrapper ${counter}`;
-  listWrapper.innerHTML = listItem.getTextContent();
-  returnList.appendChild(listWrapper);
-}
+console.log(counter);
