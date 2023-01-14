@@ -62,18 +62,22 @@ window.onload = () => {
   for (let i = 0; i < listItems.length; i++) {
     renderItems(listItems[i].textContent, listItems[i].id, listItems[i].isChecked);
   }
+  checkBoxes = document.getElementsByClassName('checkbox');
+  for (let checkbox of checkBoxes) {
+    checkbox.addEventListener('click', (e) => {
+      console.log("clicked checkbox");
+      checkBoxHandler(checkbox);
+    });
+  }
 
   deleteButtons = document.getElementsByClassName('list-delete')
   for (let button of deleteButtons) {
     button.addEventListener('click', (e) => deleteItems(button))
   }
 
-  checkBoxes = document.getElementsByClassName('checkbox');
-  for (let checkbox of checkBoxes) {
-    checkbox.addEventListener('click', (e) => checkBoxHandler(checkbox))
-  }
-
+  renderCompletedEvents(JSON.parse(localStorage.getItem('completedEvents')));
 }
+
 
 function renderItems(textContent, id, isChecked) {
   const checkbox = document.createElement("input");
@@ -123,22 +127,60 @@ const sortable = new Sortable(returnList, {
 
 //Handle completed events:
 function checkBoxHandler(checkbox) {
-  const listItemId = checkbox.parentNode.querySelector('.list-delete').id;
-  checkbox.closest('.list-item').classList.toggle("is-checked");
-
-  listItems = listItems.map(item => {
-    if (item.id === parseInt(listItemId)) {
-      item.isChecked = checkbox.checked;
+  const checkboxId = checkbox.closest('.list-item').getElementsByClassName('list-delete')[0].id;
+  console.log("id: " + checkboxId);
+  for (let i = 0; i < listItems.length; i++) {
+    if (listItems[i].id == checkboxId) {
+      listItems[i].isChecked = checkbox.checked;
+      if (listItems[i].isChecked) {
+        console.log("Adding " + listItems[i].textContent);
+        completedEvents.push(listItems[i])
+        listItems.splice(i, 1);
+        console.log("listItems updated: " + listItems);
+        localStorage.setItem('completedEvents', JSON.stringify(completedEvents))
+        localStorage.removeItem('listItems', listItems)
+        localStorage.setItem('listItems', JSON.stringify(listItems))
+      } else {
+        for (let j = 0; j < completedEvents.length; j++) {
+          if (completedEvents[j].id == checkboxId) {
+            completedEvents.splice(j, 1);
+            localStorage.removeItem('completedEvents', completedEvents);
+            localStorage.setItem('completedEvents', JSON.stringify(completedEvents))
+          }
+        }
+      }
     }
-    return item;
-  });
+  }
+  console.log("Completed: " + completedEvents);
+}
 
-  completedEvents = completedEvents.map(item => {
-    if (item.id === parseInt(listItemId)) {
-      item.isChecked = checkbox.checked;
+function renderCompletedEvents(completedEvents) {
+  if (completedEvents != null) {
+    for (let i = 0; i < completedEvents.length; i++) {
+      console.log("Rendering these completed: ");
+      console.log(completedEvents[i]);
+      let isChecked = true;
+      let textContent = completedEvents[i].textContent;
+      let id = completedEvents[i].id;
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.classList.add("checkbox");
+      checkbox.checked = isChecked;
+
+      const listItem = document.createElement("li");
+      listItem.classList.add("list-item");
+      if (isChecked) {
+        listItem.classList.toggle("is-checked");
+      }
+      listItem.innerHTML = `
+        <div class="drag-area"><img src="assets/drag.png" class=""></div>
+        <p>${textContent}</p>
+        <img id="${id}" class="list-delete" src="assets/delete.png" alt="delete">
+      `;
+
+      listItem.insertBefore(checkbox, listItem.firstChild);
+      returnList.appendChild(listItem);
     }
-    return item;
-  });
-
-  localStorage.setItem('listItems', JSON.stringify(listItems));
+  }
 }
