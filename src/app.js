@@ -2,14 +2,18 @@ const inputText = document.getElementById('inputText');
 const inputSubmit = document.getElementById('inputSubmit');
 const returnList = document.getElementById('returnList');
 let listItems = [];
+let checkBoxes = [];
+let completedEvents = [];
 let deleteButtons = [];
+let dragAreas = [];
 
 //input handling:
 inputSubmit.onclick = () => {
   try {
+    let isChecked = false
     textContent = inputText.value;
     inputText.value = "";
-    createNewListItem(textContent);
+    createNewListItem(textContent, isChecked);
     localStorage.setItem('listItems', JSON.stringify(listItems));
   } catch (error) {
     console.log(error);
@@ -23,19 +27,25 @@ inputText.addEventListener('keydown', (e) => {
 })
 
 
-function createNewListItem(textContent) {
+function createNewListItem(textContent, isChecked) {
   let listItem = {
     id: Date.now(),
-    textContent: textContent
+    textContent: textContent,
+    isChecked: isChecked
   };
 
-  renderItems(listItem.textContent, listItem.id)
+  renderItems(listItem.textContent, listItem.id, listItem.isChecked)
 
   listItems.push(listItem)
 
   deleteButtons = document.getElementsByClassName('list-delete')
   for (let button of deleteButtons) {
     button.addEventListener('click', (e) => deleteItems(button))
+  }
+
+  checkBoxes = document.getElementsByClassName('checkbox');
+  for (let checkbox of checkBoxes) {
+    checkbox.addEventListener('click', (e) => checkBoxHandler(checkbox))
   }
 }
 
@@ -50,42 +60,36 @@ function getListItems() {
 window.onload = () => {
   getListItems();
   for (let i = 0; i < listItems.length; i++) {
-    renderItems(listItems[i].textContent, listItems[i].id)
+    renderItems(listItems[i].textContent, listItems[i].id, listItems[i].isChecked);
   }
 
   deleteButtons = document.getElementsByClassName('list-delete')
   for (let button of deleteButtons) {
     button.addEventListener('click', (e) => deleteItems(button))
   }
-}
 
-class ListItem {
-  textContent;
-  id;
-  constructor(textContent, id) {
-    this.textContent = textContent;
-    this.id = id;
-  }
-
-  getTextContent() {
-    return `
-      <div class="list-item">
-        <div class="drag-area"><img src="assets/drag.png"></div>
-        <input type="checkbox">
-        <p>${this.textContent}</p>
-        <img id="${this.id}" class="list-delete" src="assets/delete.png" alt="delete">
-      </div>
-    `;
+  checkBoxes = document.getElementsByClassName('checkbox');
+  for (let checkbox of checkBoxes) {
+    checkbox.addEventListener('click', (e) => checkBoxHandler(checkbox))
   }
 }
 
-function renderItems(textContent, id) {
-  //Create new items:
-  let lI = new ListItem(textContent, id)
-  let listWrapper = document.createElement('li')
-  listWrapper.classList = `list-wrapper`;
-  listWrapper.innerHTML = lI.getTextContent();
-  returnList.appendChild(listWrapper);
+function renderItems(textContent, id, isChecked) {
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.classList.add("checkbox");
+  checkbox.checked = isChecked;
+
+  const listItem = document.createElement("li");
+  listItem.classList.add("list-item");
+  listItem.innerHTML = `
+    <div class="drag-area"><img src="assets/drag.png" class=""></div>
+    <p>${textContent}</p>
+    <img id="${id}" class="list-delete" src="assets/delete.png" alt="delete">
+  `;
+
+  listItem.insertBefore(checkbox, listItem.firstChild);
+  returnList.appendChild(listItem);
 }
 
 
@@ -98,7 +102,6 @@ function deleteItems(button) {
     if (parseInt(listItems[i].id) === parseInt(buttonId)) {
       localStorage.removeItem('listItems')
       listItems.splice(i, 1);
-      console.log(listItems);
     }
   }
   localStorage.setItem('listItems', JSON.stringify(listItems));
@@ -113,5 +116,14 @@ const sortable = new Sortable(returnList, {
   }
 });
 
-
 //Handle completed events:
+function checkBoxHandler(checkbox) {
+  const listItemId = checkbox.parentNode.querySelector('.list-delete').id;
+  listItems = listItems.map(item => {
+    if (item.id === parseInt(listItemId)) {
+      item.isChecked = checkbox.checked;
+    }
+    return item;
+  });
+  localStorage.setItem('listItems', JSON.stringify(listItems));
+}

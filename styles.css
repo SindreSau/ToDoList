@@ -1,9 +1,10 @@
 :root {
   --clr-primary: #ffffff;
   --clr-secondary: #7ca6ff;
-  --clr-grad-primary: rgb(8, 8, 8);
-  --clr-grad-secondary: rgb(22, 22, 22);
+  --clr-grad-primary: #151515;
+  --clr-grad-secondary: #080808;
   --clr-list-hover: rgb(40, 40, 40);
+  background-color: var(--clr-grad-primary);
 }
 
 * {
@@ -16,7 +17,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 8vh;
+  padding-top: 1vh;
   min-height: 100vh;
   background: linear-gradient(0deg, var(--clr-grad-primary), var(--clr-grad-secondary)) no-repeat;
 
@@ -66,7 +67,7 @@ input[type="text"] {
 input[type="submit"] {
   width: min-content;
   align-self: center;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   background-color: var(--clr-primary);
   transition: background-color, scale 300ms;
   cursor: pointer;
@@ -108,8 +109,7 @@ ul {
   color: var(--clr-primary);
   font-size: 1.125rem;
   padding: .5rem 1.5rem;
-  min-width: 60%;
-  max-width: 99%;
+  width: 96%;
 }
 
 .list-item:hover {
@@ -118,14 +118,15 @@ ul {
 
 .list-item p {
   padding-left: 3.5rem;
+  cursor: pointer;
 }
 
 input[type="checkbox"] {
-  display: none;
+  /* display: none; */
   position: absolute;
-  width: 84%;
   height: 100%;
-  left: 0;
+  left: 70px;
+  right: 70px;
 }
 
 .list-item img {
