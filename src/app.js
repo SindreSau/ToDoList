@@ -72,6 +72,7 @@ window.onload = () => {
   for (let checkbox of checkBoxes) {
     checkbox.addEventListener('click', (e) => checkBoxHandler(checkbox))
   }
+
 }
 
 function renderItems(textContent, id, isChecked) {
@@ -82,6 +83,10 @@ function renderItems(textContent, id, isChecked) {
 
   const listItem = document.createElement("li");
   listItem.classList.add("list-item");
+  if (isChecked) {
+    console.log(listItem);
+    listItem.classList.toggle("is-checked");
+  }
   listItem.innerHTML = `
     <div class="drag-area"><img src="assets/drag.png" class=""></div>
     <p>${textContent}</p>
@@ -119,11 +124,21 @@ const sortable = new Sortable(returnList, {
 //Handle completed events:
 function checkBoxHandler(checkbox) {
   const listItemId = checkbox.parentNode.querySelector('.list-delete').id;
+  checkbox.closest('.list-item').classList.toggle("is-checked");
+
   listItems = listItems.map(item => {
     if (item.id === parseInt(listItemId)) {
       item.isChecked = checkbox.checked;
     }
     return item;
   });
+
+  completedEvents = completedEvents.map(item => {
+    if (item.id === parseInt(listItemId)) {
+      item.isChecked = checkbox.checked;
+    }
+    return item;
+  });
+
   localStorage.setItem('listItems', JSON.stringify(listItems));
 }
