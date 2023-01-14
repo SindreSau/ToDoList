@@ -1,5 +1,3 @@
-//This time focusing on using arrays!
-
 const inputText = document.getElementById('inputText');
 const inputSubmit = document.getElementById('inputSubmit');
 const returnList = document.getElementById('returnList');
@@ -88,9 +86,6 @@ function renderItems(textContent, id) {
   listWrapper.classList = `list-wrapper`;
   listWrapper.innerHTML = lI.getTextContent();
   returnList.appendChild(listWrapper);
-
-  //Handle drag and drop:
-  
 }
 
 
@@ -111,7 +106,12 @@ function deleteItems(button) {
 
 
 //Sortable:
+const sortable = new Sortable(returnList, {
+  onEnd: (event) => {
+    listItems.splice(event.newIndex, 0, listItems.splice(event.oldIndex, 1)[0])
+    localStorage.setItem('listItems', JSON.stringify(listItems))
+  }
+});
 
-/* $(function () {
-  $("#returnList").sortable();
-}); */
+
+//Handle completed events:
