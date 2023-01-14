@@ -69,14 +69,20 @@ class ListItem {
 //get items into inStorage on load:
 window.onload = () => {
   let key;
+  for (let i = 0; i < localStorage.length; i++) {
+    console.log(localStorage[i]);
+  }
   if (localStorage.length <= 15) {
     for (let i = 0; i < localStorage.length; i++) {
       if (localStorage.key(i) !== "debug") {
         key = inStorageKeys.push(localStorage.key(i));
       }
+      console.log(inStorageKeys);
     }
   } else {
     localStorage.clear();
+    console.log("Exceeded storage-limit");
+    alert("Exceeded storage-limit. Storage will be cleared")
   }
   for (let i = 0; i < inStorageKeys.length; i++) {
     key = inStorageKeys[i]
@@ -84,7 +90,6 @@ window.onload = () => {
     createNewListItem(inStorageValues[i])
   }
   console.log(inStorageValues);
-  console.log(inStorageKeys);
 }
 
 console.log(counter);
