@@ -7,10 +7,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="assets/to-do-list.ico">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600&display=swap" rel="stylesheet">
 
-  <!-- JQuerty sortable -->
-  <!-- <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <title>To-Do List</title>
 </head>
@@ -24,11 +26,14 @@
     </div>
     <ul id="returnList" class="movable">
       <!-- List will be returned by js -->
-      
+    </ul>
+    <h2>Completed</h2>
+    <ul id="completedList" class="movable">
+      <!-- List will be returned by js -->
     </ul>
   </div>
 
-  <script src="src/appOld.js"></script>
+  <script src="src/app.js"></script>
 </body>
 
 </html>
