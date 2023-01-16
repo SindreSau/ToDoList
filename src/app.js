@@ -1,20 +1,19 @@
 const inputText = document.getElementById('inputText');
 const inputSubmit = document.getElementById('inputSubmit');
 const returnList = document.getElementById('returnList');
+const completedList = document.getElementById('completedList');
 let listItems = [];
-let checkBoxes = [];
-let completedEvents = [];
+let completedItems = [];
 let deleteButtons = [];
-let dragAreas = [];
 
 //input handling:
 inputSubmit.onclick = () => {
   try {
-    let isChecked = false
     textContent = inputText.value;
     inputText.value = "";
-    createNewListItem(textContent, isChecked);
-    localStorage.setItem('listItems', JSON.stringify(listItems));
+    if (textContent != "") {
+      createNewListItem(textContent);
+    }
   } catch (error) {
     console.log(error);
   }
@@ -23,164 +22,128 @@ inputSubmit.onclick = () => {
 inputText.addEventListener('keydown', (e) => {
   if (e.key === "Enter") {
     inputSubmit.click();
+    document.change
   }
 })
 
+//Sortable:
+const sortable = new Sortable(returnList, {
+  handle: '.handle',
+  animation: 200,
+  ghostclass: 'sortable-ghost-class',
+  onEnd: (event) => {
+    saveState()
+  }
+});
 
-function createNewListItem(textContent, isChecked) {
-  let listItem = {
-    id: Date.now(),
-    textContent: textContent,
-    isChecked: isChecked
-  };
+const sortableCompleted = new Sortable(completedList, {
+  handle: '.handle',
+  animation: 200,
+  ghostclass: 'sortable-ghost-class',
+  onEnd: (event) => {
+    saveCompleted()
+  }
+});
 
-  renderItems(listItem.textContent, listItem.id, listItem.isChecked)
+function createNewListItem(textContent) {
+  renderItems(textContent)
+  saveState();
+}
 
-  listItems.push(listItem)
-
-  deleteButtons = document.getElementsByClassName('list-delete')
-  for (let button of deleteButtons) {
-    button.addEventListener('click', (e) => deleteItems(button))
+class ListItem {
+  textContent;
+  constructor(textContent) {
+    this.textContent = textContent;
   }
 
-  checkBoxes = document.getElementsByClassName('checkbox');
-  for (let checkbox of checkBoxes) {
-    checkbox.addEventListener('click', (e) => checkBoxHandler(checkbox))
+  getTextContent() {
+    return `
+      <div class="list-item">
+        <div class="handle"><img src="assets/drag.png"></div>
+        <input type="checkbox">
+        <p>${this.textContent}</p>
+        <img id="deleteBtn" class="list-delete" src="assets/delete.png" alt="delete">
+      </div>
+    `;
   }
+}
+
+function renderItems(textContent) {
+  //Render new items:
+  let lI = new ListItem(textContent)
+  let listWrapper = document.createElement('li')
+  listWrapper.classList = `list-wrapper`;
+  listWrapper.innerHTML = lI.getTextContent();
+  addCheckEventlistener(listWrapper);
+  addDeleteEventlistener(listWrapper)
+  listItems.push(listWrapper);
+  returnList.appendChild(listWrapper);
+}
+
+function renderCompletedItems(textContent, id) {
+  let lI = new ListItem(textContent)
+  let listWrapper = document.createElement('li')
+  listWrapper.classList = `list-wrapper`;
+  listWrapper.innerHTML = lI.getTextContent();
+  listItems.push(listWrapper);
+  completedList.appendChild(listWrapper);
+  listWrapper.querySelector('div').classList.add("is-checked")
 }
 
 
 //handle page refresh:
 function getListItems() {
-  if (localStorage.getItem('listItems') !== null) {
-    listItems = JSON.parse(localStorage.getItem('listItems'));
+  if (localStorage.getItem('returnListState') !== null) {
+    const storedReturnlistState = localStorage.getItem('returnListState')
+    returnList.innerHTML = storedReturnlistState;
+    const storedCompleteListState = localStorage.getItem('completedList')
+    completedList.innerHTML = storedCompleteListState;
   }
 }
-
 window.onload = () => {
   getListItems();
-  for (let i = 0; i < listItems.length; i++) {
-    renderItems(listItems[i].textContent, listItems[i].id, listItems[i].isChecked);
-  }
-  checkBoxes = document.getElementsByClassName('checkbox');
-  for (let checkbox of checkBoxes) {
-    checkbox.addEventListener('click', (e) => {
-      console.log("clicked checkbox");
-      checkBoxHandler(checkbox);
-    });
-  }
-
-  deleteButtons = document.getElementsByClassName('list-delete')
-  for (let button of deleteButtons) {
-    button.addEventListener('click', (e) => deleteItems(button))
-  }
-
-  renderCompletedEvents(JSON.parse(localStorage.getItem('completedEvents')));
+  listItems = Array.from(returnList.querySelectorAll('li'));
+  listItems.forEach(listItem => {
+    addCheckEventlistener(listItem);
+    addDeleteEventlistener(listItem);
+  })
+  completedItems = Array.from(completedList.querySelectorAll('li'));
+  completedItems.forEach(completedItem => {
+    addDeleteEventlistener(completedItem);
+  })
 }
 
-
-function renderItems(textContent, id, isChecked) {
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.classList.add("checkbox");
-  checkbox.checked = isChecked;
-
-  const listItem = document.createElement("li");
-  listItem.classList.add("list-item");
-  if (isChecked) {
-    console.log(listItem);
-    listItem.classList.toggle("is-checked");
-  }
-  listItem.innerHTML = `
-    <div class="drag-area"><img src="assets/drag.png" class=""></div>
-    <p>${textContent}</p>
-    <img id="${id}" class="list-delete" src="assets/delete.png" alt="delete">
-  `;
-
-  listItem.insertBefore(checkbox, listItem.firstChild);
-  returnList.appendChild(listItem);
-}
-
-
-//Delete items:
-function deleteItems(button) {
-  let buttonId = button.id;
-  let toRemove = button.closest('.list-wrapper');
-  toRemove.remove()
-  for (let i = 0; i < listItems.length; i++) {
-    if (parseInt(listItems[i].id) === parseInt(buttonId)) {
-      localStorage.removeItem('listItems')
-      listItems.splice(i, 1);
+//handle checkboxes
+function addCheckEventlistener(element) {
+  let checkbox = element.querySelector('input');
+  checkbox.addEventListener('change', () => {
+    let textContent = element.querySelector('p').textContent;
+    if (checkbox.checked) {
+      renderCompletedItems(textContent)
+      completedItems.push(element)
+      element.remove()
+      saveState();
+      saveCompleted();
     }
-  }
-  localStorage.setItem('listItems', JSON.stringify(listItems));
+  })
 }
 
-
-//Sortable:
-const sortable = new Sortable(returnList, {
-  onEnd: (event) => {
-    listItems.splice(event.newIndex, 0, listItems.splice(event.oldIndex, 1)[0])
-    localStorage.setItem('listItems', JSON.stringify(listItems))
-  }
-});
-
-//Handle completed events:
-function checkBoxHandler(checkbox) {
-  const checkboxId = checkbox.closest('.list-item').getElementsByClassName('list-delete')[0].id;
-  console.log("id: " + checkboxId);
-  for (let i = 0; i < listItems.length; i++) {
-    if (listItems[i].id == checkboxId) {
-      listItems[i].isChecked = checkbox.checked;
-      if (listItems[i].isChecked) {
-        console.log("Adding " + listItems[i].textContent);
-        completedEvents.push(listItems[i])
-        listItems.splice(i, 1);
-        console.log("listItems updated: " + listItems);
-        localStorage.setItem('completedEvents', JSON.stringify(completedEvents))
-        localStorage.removeItem('listItems', listItems)
-        localStorage.setItem('listItems', JSON.stringify(listItems))
-      } else {
-        for (let j = 0; j < completedEvents.length; j++) {
-          if (completedEvents[j].id == checkboxId) {
-            completedEvents.splice(j, 1);
-            localStorage.removeItem('completedEvents', completedEvents);
-            localStorage.setItem('completedEvents', JSON.stringify(completedEvents))
-          }
-        }
-      }
-    }
-  }
-  console.log("Completed: " + completedEvents);
+//handle deleting
+function addDeleteEventlistener(element) {
+  let deleteBtn = element.querySelectorAll('img')[1];
+  
+  deleteBtn.addEventListener('click', () => {
+    element.remove();
+    saveState();
+    saveCompleted();
+  })
 }
 
-function renderCompletedEvents(completedEvents) {
-  if (completedEvents != null) {
-    for (let i = 0; i < completedEvents.length; i++) {
-      console.log("Rendering these completed: ");
-      console.log(completedEvents[i]);
-      let isChecked = true;
-      let textContent = completedEvents[i].textContent;
-      let id = completedEvents[i].id;
+//Savestate function
+function saveState() {
+  localStorage.setItem('returnListState', returnList.innerHTML)
+}
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.classList.add("checkbox");
-      checkbox.checked = isChecked;
-
-      const listItem = document.createElement("li");
-      listItem.classList.add("list-item");
-      if (isChecked) {
-        listItem.classList.toggle("is-checked");
-      }
-      listItem.innerHTML = `
-        <div class="drag-area"><img src="assets/drag.png" class=""></div>
-        <p>${textContent}</p>
-        <img id="${id}" class="list-delete" src="assets/delete.png" alt="delete">
-      `;
-
-      listItem.insertBefore(checkbox, listItem.firstChild);
-      returnList.appendChild(listItem);
-    }
-  }
+function saveCompleted() {
+  localStorage.setItem('completedList', completedList.innerHTML)
 }
