@@ -1,3 +1,3 @@
 to-do list using localstorage
 
-https://sindresau.github.io/ToDoListV1/
+https://sindresau.github.io/ToDoList/
